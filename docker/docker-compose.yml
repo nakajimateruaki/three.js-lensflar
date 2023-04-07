@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  apache:
+    image: php:7.4-apache
+    hostname: php-local
+    container_name: threejs_lensflare
+    build: ./php-apache
+    ports:
+      - "80:80"
+    volumes:
+      - ../:/var/www/html/
+      # Apache2 Logs
+      - ./php-apache/data/log:/host/log
