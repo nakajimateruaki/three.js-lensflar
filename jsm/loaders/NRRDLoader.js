@@ -3,7 +3,7 @@ import {
 	Loader,
 	Matrix4,
 	Vector3
-} from 'three';
+} from '../../../build/three.module.js';
 import * as fflate from '../libs/fflate.module.js';
 import { Volume } from '../misc/Volume.js';
 
@@ -47,16 +47,6 @@ class NRRDLoader extends Loader {
 			}
 
 		}, onProgress, onError );
-
-	}
-
-	/**
-	 *
-	 * @param {boolean} segmentation is a option for user to choose
-   	 */
-	setSegmentation( segmentation ) {
-
-	    this.segmentation = segmentation;
 
 	}
 
@@ -183,7 +173,8 @@ class NRRDLoader extends Loader {
 
 					headerObject.isNrrd = true;
 
-				} else if ( ! l.match( /^#/ ) && ( m = l.match( /(.*):(.*)/ ) ) ) {
+				} else if ( l.match( /^#/ ) ) {
+				} else if ( m = l.match( /(.*):(.*)/ ) ) {
 
 					field = m[ 1 ].trim();
 					data = m[ 2 ].trim();
@@ -217,11 +208,7 @@ class NRRDLoader extends Loader {
 			if ( ! headerObject.vectors ) {
 
 				//if no space direction is set, let's use the identity
-				headerObject.vectors = [ ];
-				headerObject.vectors.push( [ 1, 0, 0 ] );
-				headerObject.vectors.push( [ 0, 1, 0 ] );
-				headerObject.vectors.push( [ 0, 0, 1 ] );
-
+				headerObject.vectors = [ new Vector3( 1, 0, 0 ), new Vector3( 0, 1, 0 ), new Vector3( 0, 0, 1 ) ];
 				//apply spacing if defined
 				if ( headerObject.spacings ) {
 
@@ -229,11 +216,7 @@ class NRRDLoader extends Loader {
 
 						if ( ! isNaN( headerObject.spacings[ i ] ) ) {
 
-							for ( let j = 0; j <= 2; j ++ ) {
-
-								headerObject.vectors[ i ][ j ] *= headerObject.spacings[ i ];
-
-							}
+							headerObject.vectors[ i ].multiplyScalar( headerObject.spacings[ i ] );
 
 						}
 
@@ -337,7 +320,7 @@ class NRRDLoader extends Loader {
 
 			// we need to decompress the datastream
 			// here we start the unzipping and get a typed Uint8Array back
-			_data = fflate.gunzipSync( new Uint8Array( _data ) );
+			_data = fflate.gunzipSync( new Uint8Array( _data ) );// eslint-disable-line no-undef
 
 		} else if ( headerObject.encoding === 'ascii' || headerObject.encoding === 'text' || headerObject.encoding === 'txt' || headerObject.encoding === 'hex' ) {
 
@@ -388,22 +371,10 @@ class NRRDLoader extends Loader {
 			const yIndex = headerObject.vectors.findIndex( vector => vector[ 1 ] !== 0 );
 			const zIndex = headerObject.vectors.findIndex( vector => vector[ 2 ] !== 0 );
 
-			let axisOrder = [];
-
-			if ( xIndex !== yIndex && xIndex !== zIndex && yIndex !== zIndex ) {
-
-				axisOrder[ xIndex ] = 'x';
-				axisOrder[ yIndex ] = 'y';
-				axisOrder[ zIndex ] = 'z';
-
-			} else {
-
-				axisOrder[ 0 ] = 'x';
-				axisOrder[ 1 ] = 'y';
-				axisOrder[ 2 ] = 'z';
-
-			}
-
+			const axisOrder = [];
+			axisOrder[ xIndex ] = 'x';
+			axisOrder[ yIndex ] = 'y';
+			axisOrder[ zIndex ] = 'z';
 			volume.axisOrder = axisOrder;
 
 		} else {
@@ -445,7 +416,7 @@ class NRRDLoader extends Loader {
 		}
 
 
-		if ( ! headerObject.vectors || this.segmentation ) {
+		if ( ! headerObject.vectors ) {
 
 			volume.matrix.set(
 				1, 0, 0, 0,

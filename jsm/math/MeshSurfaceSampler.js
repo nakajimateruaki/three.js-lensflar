@@ -1,7 +1,7 @@
 import {
 	Triangle,
 	Vector3
-} from 'three';
+} from '../../../build/three.module.js';
 
 /**
  * Utility class for sampling weighted random points on the surface of a mesh.
@@ -22,6 +22,12 @@ class MeshSurfaceSampler {
 	constructor( mesh ) {
 
 		let geometry = mesh.geometry;
+
+		if ( ! geometry.isBufferGeometry || geometry.attributes.position.itemSize !== 3 ) {
+
+			throw new Error( 'THREE.MeshSurfaceSampler: Requires BufferGeometry triangle mesh.' );
+
+		}
 
 		if ( geometry.index ) {
 

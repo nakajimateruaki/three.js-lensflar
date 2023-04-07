@@ -1,8 +1,8 @@
 import {
 	ShaderMaterial,
 	UniformsUtils
-} from 'three';
-import { Pass, FullScreenQuad } from './Pass.js';
+} from '../../../build/three.module.js';
+import { Pass, FullScreenQuad } from '../postprocessing/Pass.js';
 
 class ShaderPass extends Pass {
 
@@ -60,14 +60,6 @@ class ShaderPass extends Pass {
 			this.fsQuad.render( renderer );
 
 		}
-
-	}
-
-	dispose() {
-
-		this.material.dispose();
-
-		this.fsQuad.dispose();
 
 	}
 

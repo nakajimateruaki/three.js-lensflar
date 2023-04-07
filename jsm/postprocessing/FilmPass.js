@@ -1,8 +1,8 @@
 import {
 	ShaderMaterial,
 	UniformsUtils
-} from 'three';
-import { Pass, FullScreenQuad } from './Pass.js';
+} from '../../../build/three.module.js';
+import { Pass, FullScreenQuad } from '../postprocessing/Pass.js';
 import { FilmShader } from '../shaders/FilmShader.js';
 
 class FilmPass extends Pass {
@@ -10,6 +10,8 @@ class FilmPass extends Pass {
 	constructor( noiseIntensity, scanlinesIntensity, scanlinesCount, grayscale ) {
 
 		super();
+
+		if ( FilmShader === undefined ) console.error( 'THREE.FilmPass relies on FilmShader' );
 
 		const shader = FilmShader;
 
@@ -49,14 +51,6 @@ class FilmPass extends Pass {
 			this.fsQuad.render( renderer );
 
 		}
-
-	}
-
-	dispose() {
-
-		this.material.dispose();
-
-		this.fsQuad.dispose();
 
 	}
 

@@ -30,9 +30,9 @@ class WebGPUBindings {
 
 			// setup (static) binding layout and (dynamic) binding group
 
-			const pipeline = object.isNode ? this.computePipelines.get( object ) : this.renderPipelines.get( object ).pipeline;
+			const renderPipeline = this.renderPipelines.get( object );
 
-			const bindLayout = pipeline.getBindGroupLayout( 0 );
+			const bindLayout = renderPipeline.pipeline.getBindGroupLayout( 0 );
 			const bindGroup = this._createBindGroup( bindings, bindLayout );
 
 			data = {
@@ -46,12 +46,6 @@ class WebGPUBindings {
 		}
 
 		return data;
-
-	}
-
-	remove( object ) {
-
-		this.uniformsData.delete( object );
 
 	}
 
@@ -84,7 +78,7 @@ class WebGPUBindings {
 
 	}
 
-	update( object ) {
+	update( object, camera ) {
 
 		const textures = this.textures;
 
@@ -108,20 +102,24 @@ class WebGPUBindings {
 			if ( binding.isUniformBuffer ) {
 
 				const buffer = binding.getBuffer();
+				const bufferGPU = binding.bufferGPU;
+
 				const needsBufferWrite = binding.update();
 
 				if ( needsBufferWrite === true ) {
 
-					const bufferGPU = binding.bufferGPU;
-
-					this.device.queue.writeBuffer( bufferGPU, 0, buffer, 0 );
+					this.device.queue.writeBuffer(
+						bufferGPU,
+						0,
+						buffer,
+						0
+					);
 
 				}
 
 			} else if ( binding.isStorageBuffer ) {
 
 				const attribute = binding.attribute;
-
 				this.attributes.update( attribute, false, binding.usage );
 
 			} else if ( binding.isSampler ) {
@@ -143,11 +141,10 @@ class WebGPUBindings {
 
 				const texture = binding.getTexture();
 
-				const needsTextureRefresh = textures.updateTexture( texture );
-
+				const forceUpdate = textures.updateTexture( texture );
 				const textureGPU = textures.getTextureGPU( texture );
 
-				if ( textureGPU !== undefined && binding.textureGPU !== textureGPU || needsTextureRefresh === true ) {
+				if ( textureGPU !== undefined && binding.textureGPU !== textureGPU || forceUpdate === true ) {
 
 					binding.textureGPU = textureGPU;
 					needsBindGroupRefresh = true;
@@ -190,7 +187,7 @@ class WebGPUBindings {
 
 					binding.bufferGPU = this.device.createBuffer( {
 						size: byteLength,
-						usage: binding.usage
+						usage: binding.usage,
 					} );
 
 				}
@@ -228,10 +225,6 @@ class WebGPUBindings {
 
 						binding.textureGPU = this.textures.getDefaultCubeTexture();
 
-					} else if ( binding.texture.isVideoTexture ) {
-
-						binding.textureGPU = this.textures.getVideoDefaultTexture();
-
 					} else {
 
 						binding.textureGPU = this.textures.getDefaultTexture();
@@ -240,9 +233,7 @@ class WebGPUBindings {
 
 				}
 
-				const resource = binding.textureGPU instanceof GPUTexture ? binding.textureGPU.createView( { dimension: binding.dimension } ) : binding.textureGPU;
-
-				entries.push( { binding: bindingPoint, resource } );
+				entries.push( { binding: bindingPoint, resource: binding.textureGPU.createView( { dimension: binding.dimension } ) } );
 
 			}
 
@@ -251,8 +242,8 @@ class WebGPUBindings {
 		}
 
 		return this.device.createBindGroup( {
-			layout,
-			entries
+			layout: layout,
+			entries: entries
 		} );
 
 	}

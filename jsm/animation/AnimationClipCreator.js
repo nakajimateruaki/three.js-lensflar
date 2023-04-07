@@ -5,7 +5,7 @@ import {
 	NumberKeyframeTrack,
 	Vector3,
 	VectorKeyframeTrack
-} from 'three';
+} from '../../../build/three.module.js';
 
 class AnimationClipCreator {
 
@@ -94,16 +94,14 @@ class AnimationClipCreator {
 		const times = [], values = [],
 			timeStep = duration / colors.length;
 
-		for ( let i = 0; i < colors.length; i ++ ) {
+		for ( let i = 0; i <= colors.length; i ++ ) {
 
 			times.push( i * timeStep );
-
-			const color = colors[ i ];
-			values.push( color.r, color.g, color.b );
+			values.push( colors[ i % colors.length ] );
 
 		}
 
-		const trackName = '.material.color';
+		const trackName = '.material[0].color';
 
 		const track = new ColorKeyframeTrack( trackName, times, values );
 
